@@ -14,7 +14,7 @@ services:
       retries: 5
 
   web:
-    image: ${DOCKER_HUB_USERNAME}/RF-test-bot:${IMAGE_TAG:-latest}
+    image: ${DOCKER_HUB_USERNAME}/rf-test-bot:${IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -41,7 +41,7 @@ services:
       - db
 
   nginx:
-    image: ${DOCKER_HUB_USERNAME}/RF-test-bot-nginx:${IMAGE_TAG:-latest}
+    image: ${DOCKER_HUB_USERNAME}/rf-test-bot-nginx:${IMAGE_TAG:-latest}
     build:
       context: ./nginx
       dockerfile: Dockerfile

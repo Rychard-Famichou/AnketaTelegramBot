@@ -7,7 +7,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 
 # 1. Настройка окружения Django (Важно сделать ДО импорта моделей!)
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "my_project.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 # Теперь мы можем безопасно импортировать модели
