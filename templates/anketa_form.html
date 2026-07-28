@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Анкета соискателя</title>
+    <!-- Подключаем Telegram Web App JS SDK -->
+    <script src="https://telegram.org"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: var(--tg-theme-bg-color, #fff); color: var(--tg-theme-text-color, #000); }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background-color: var(--tg-theme-button-color, #248bed); color: var(--tg-theme-button-text-color, #fff); border: none; border-radius: 5px; font-size: 16px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h2>Анкета кандидата</h2>
+    <form id="anketaForm">
+        <div class="form-group">
+            <label for="name">ФИО:</label>
+            <input type="text" id="name" required placeholder="Иванов Иван Иванович">
+        </div>
+        <div class="form-group">
+            <label for="specialty">Специализация / Вакансия:</label>
+            <select id="specialty">
+                <option value="python">Python разработчик</option>
+                <option value="hr">HR-менеджер</option>
+                <option value="sales">Менеджер по продажам</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="experience">Опыт работы:</label>
+            <textarea id="experience" rows="4" placeholder="Расскажите о вашем опыте..."></textarea>
+        </div>
+        <button type="submit">Отправить анкету</button>
+    </form>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем окно на максимум
+
+        document.getElementById('anketaForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Собираем данные из полей
+            const data = {
+                name: document.getElementById('name').value,
+                specialty: document.getElementById('specialty').value,
+                experience: document.getElementById('experience').value
+            };
+
+            // Отправляем данные боту (работает только если Web App открыт через KeyboardButton)
+            tg.sendData(JSON.stringify(data));
+            tg.close(); // Закрываем Web App после отправки
+        });
+    </script>
+</body>
+</html>
