@@ -40,6 +40,7 @@ services:
     depends_on:
       - db
 
+  # 4. Веб-сервер Nginx (принимает трафик 80 и 443)
   nginx:
     image: ${DOCKER_HUB_USERNAME}/rf-test-bot-nginx:${IMAGE_TAG:-latest}
     build:
@@ -47,10 +48,23 @@ services:
       dockerfile: Dockerfile
     ports:
       - "80:80"
+      - "443:443"
     volumes:
-      - static_volume:/app/staticfiles
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+      - static_volume:/app/static
     depends_on:
       - web
+
+  # 5. Автоматический выпуск и проверка SSL-сертификатов
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - ./nginx/certbot/conf:/etc/letsencrypt
+      - ./nginx/certbot/www:/var/www/certbot
+    # Проверка обновлений сертификата каждые 12 часов
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   pg_data:
