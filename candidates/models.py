@@ -7,9 +7,10 @@ class Candidate(models.Model):
     username = models.CharField(max_length=150, blank=True, null=True, verbose_name="Никнейм")
 
     # Данные из анкеты Web App
-    full_name = models.CharField(max_length=255, verbose_name="ФИО")
-    specialty = models.CharField(max_length=100, verbose_name="Специализация")
-    experience = models.TextField(verbose_name="Опыт работы")
+    first_name = models.CharField(max_length=50, verbose_name="Имя")
+    last_name = models.CharField(max_length=50, verbose_name="Фамилия")
+    gender = models.CharField(max_length=20, verbose_name="Пол")
+    phone = models.CharField(max_length=20, verbose_name="Телефон")
 
     # Метаданные
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата подачи")
@@ -20,4 +21,4 @@ class Candidate(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.full_name} ({self.specialty})"
+        return f"{self.username} ({self.telegram_id})"
