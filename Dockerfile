@@ -31,8 +31,5 @@ RUN poetry lock && poetry install --no-root
 # Копируем остальной код проекта
 COPY . .
 
-# Сборка статики Django при запуске контейнера
-RUN python manage.py collectstatic --noinput
-
 # Команда по умолчанию (будет переопределена в docker-compose)
 CMD ["gunicorn", "config.asgi:application", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
