@@ -28,4 +28,3 @@ urlpatterns = [
 if settings.DEBUG:
     # Заставляем Django в режиме отладки искать файлы СТРОГО в вашей папке static в корне проекта
     urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, 'static'))
-
