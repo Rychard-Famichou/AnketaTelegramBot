@@ -14,7 +14,6 @@ dependencies = [
     "aiogram (>=3.30.0,<4.0.0)",
     "docker (>=7.2.0,<8.0.0)",
     "gunicorn (>=26.0.0,<27.0.0)",
-    "djangorestframework-stubs (>=3.17.1,<4.0.0)",
     "uvicorn (>=0.52.0,<0.53.0)",
     "django-crispy-forms (>=2.7)",
     "crispy-bootstrap5 (>=2026.3,<2027.0)"
@@ -24,3 +23,72 @@ dependencies = [
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "flake8 (>=7.3.0,<8.0.0)",
+    "black (>=26.5.1,<27.0.0)",
+    "isort (>=8.0.1,<9.0.0)",
+    "djangorestframework-stubs (>=3.17.1,<4.0.0)",
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.black]
+line-length = 119
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.pytest_cache
+  | \.venv
+  | venv
+  | dist
+  | migrations
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 119
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+known_django = ["django", "rest_framework", "corsheaders"]
+known_celery = ["celery", "kombu"]
+sections = ["FUTURE", "STDLIB", "DJANGO", "CELERY", "THIRDPARTY", "FIRSTPARTY", "LOCALFOLDER"]
+skip = ["migrations", ".venv"]
+
+# Настройки для плагина django-stubs
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[tool.coverage.run]
+omit = [
+    "manage.py",
+    "**/migrations/**",
+    "**/asgi.py",
+    "**/wsgi.py",
+    "**/settings.py",
+    "**/swagger_inspectors.py",
+    "**/db_init.py",
+    "**/email_backend.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __str__",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]
+skip_empty = true
+show_missing = true
+fail_under = 80

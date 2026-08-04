@@ -54,7 +54,11 @@
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
 
-        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const tg = window.Telegram?.WebApp;
+        if (!tg?.initData) {
+            alert("Откройте анкету через Telegram.");
+            return;
+        }
         if (tg) tg.expand();
 
         const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
@@ -63,8 +67,11 @@
         // БЛОК ПРЕДЗАПОЛНЕНИЯ ДАННЫХ
         if (user && user.id) {
             try {
-                // Делает запрос на /api/candidates/ID_ПОЛЬЗОВАТЕЛЯ/
-                const res = await fetch(`/api/candidates/${user.id}/`);
+                const res = await fetch("/api/candidates/me/", {
+                    headers: {
+                        "X-Telegram-Init-Data": tg.initData,
+                    },
+                });
                 if (res.ok) {
                     const data = await res.json();
 
@@ -105,30 +112,24 @@
             const formDataInstance = new FormData(this);
             const formData = Object.fromEntries(formDataInstance.entries());
 
-            let telegram_id = null;
-            let username = null;
-
-            if (user) {
-                telegram_id = Number(user.id);
-                username = user.username || null;
-            }
-
-            // Добавляем обязательные данные в JSON
-            formData.telegram_id = telegram_id ? telegram_id : 123456789;
-            formData.username = username ? username : "test_browser_user";
-
             try {
-                const response = await fetch('/api/candidates/', {
-                    method: 'POST',
+                const response = await fetch("/api/candidates/", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                        "X-Telegram-Init-Data": tg.initData,
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify({
+                        first_name: formData.first_name,
+                        last_name: formData.last_name,
+                        gender: formData.gender,
+                        phone: formData.phone,
+                    }),
                 });
 
                 if (response.ok) {
-                    alert('Данные успешно сохранены в БД!');
+                    alert('Данные успешно сохранены!');
                     if (tg) tg.close();
                 } else {
                     const errors = await response.json();

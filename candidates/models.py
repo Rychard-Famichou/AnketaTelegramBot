@@ -1,5 +1,6 @@
 from django.db import models
 
+
 # Create your models here.
 class Candidate(models.Model):
     # Служебные данные Telegram
@@ -18,7 +19,7 @@ class Candidate(models.Model):
     class Meta:
         verbose_name = "Кандидат"
         verbose_name_plural = "Кандидаты"
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.username} ({self.telegram_id})"

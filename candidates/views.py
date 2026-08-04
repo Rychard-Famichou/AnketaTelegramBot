@@ -1,8 +1,13 @@
 import asyncio
+import hashlib
+import hmac
 import json
+import time
+from urllib.parse import parse_qsl
 
-from asgiref.sync import async_to_sync
-from django.http import HttpResponse
+from django.conf import settings
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponse, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -11,11 +16,13 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from aiogram.types import Update
+from asgiref.sync import async_to_sync
+
 from candidates.forms import CandidateForm
 from candidates.models import Candidate
 from candidates.serializers import CandidateSerializer
 from tg_bot import bot, dp
-from aiogram.types import Update
 
 
 # Create your views here.
@@ -24,14 +31,15 @@ class AnketaFormView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['form'] = CandidateForm()  # Передаем пустую форму в шаблон
+        context["form"] = CandidateForm()  # Передаем пустую форму в шаблон
         return context
 
 
 class CandidateCreateAPIView(APIView):
     def post(self, request, *args, **kwargs):
-        telegram_id = request.data.get("telegram_id")
-        username = request.data.get("username")
+        telegram_user = get_telegram_user(request)
+        telegram_id = telegram_user["id"]
+        username = telegram_user.get("username")
 
         if not telegram_id:
             return Response({"error": "Telegram ID обязателен"}, status=status.HTTP_400_BAD_REQUEST)
@@ -88,31 +96,69 @@ class CandidateCreateAPIView(APIView):
             print(f"Не удалось отправить уведомление в Telegram: {e}")
 
 
+def get_telegram_user(request) -> dict:
+    init_data = request.headers.get("X-Telegram-Init-Data", "")
+
+    try:
+        data = dict(parse_qsl(init_data, keep_blank_values=True))
+        received_hash = data.pop("hash")
+        auth_date = int(data["auth_date"])
+        user = json.loads(data["user"])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise PermissionDenied("Некорректные данные Telegram.") from exc
+
+    data_check_string = "\n".join(
+        f"{key}={value}" for key, value in sorted(data.items())
+    )
+    secret_key = hmac.new(
+        b"WebAppData",
+        settings.TELEGRAM_BOT_TOKEN.encode(),
+        hashlib.sha256,
+    ).digest()
+    expected_hash = hmac.new(
+        secret_key,
+        data_check_string.encode(),
+        hashlib.sha256,
+    ).hexdigest()
+
+    if not hmac.compare_digest(expected_hash, received_hash):
+        raise PermissionDenied("Подпись Telegram не прошла проверку.")
+
+    if time.time() - auth_date > 24 * 60 * 60:
+        raise PermissionDenied("Сессия Telegram устарела.")
+
+    return user
+
+
 class CandidateDetailAPIView(APIView):
-    def get(self, request, telegram_id, *args, **kwargs):
+    def get(self, request, *args, **kwargs):
+        telegram_user = get_telegram_user(request)
+
         try:
-            candidate = Candidate.objects.get(telegram_id=telegram_id)
-            serializer = CandidateSerializer(candidate)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            candidate = Candidate.objects.get(telegram_id=telegram_user["id"])
         except Candidate.DoesNotExist:
-            return Response({"detail": "Кандидат не найден"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Кандидат не найден"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response(CandidateSerializer(candidate).data)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
+@method_decorator(csrf_exempt, name="dispatch")
 class TelegramWebhookView(View):
     # Полностью асинный метод для ASGI
     async def post(self, request, *args, **kwargs):
+        received_token = request.META.get('HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN')
+        if received_token != settings.TELEGRAM_SECRET_TOKEN:
+            return HttpResponseForbidden("Доступ запрещен: неверный секретный токен.")
         try:
-            # Читаем тело запроса асинхронно (доступно в Django 4.0+)
-            body = request.body.decode('utf-8')
-            update_data = json.loads(body)
-
-            update = Update(**update_data)
-
+            # Превращаем сырой текст запроса в объект Update
+            update = Update.model_validate_json(request.body.decode('utf-8'))
             # Нативно передаем в aiogram без оберток
             await dp.feed_update(bot, update)
-
             return HttpResponse("OK", status=200)
+
         except Exception as e:
             print(f"Ошибка в асинхронном вебхуке: {e}")
             return HttpResponse("Error", status=500)
