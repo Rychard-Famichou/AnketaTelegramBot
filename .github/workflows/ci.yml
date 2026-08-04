@@ -49,7 +49,7 @@ jobs:
 
       # Здесь ставятся ВСЕ зависимости (включая dev), так как флаг --only main не указан
       - name: Install dependencies
-        if: steps:cached-poetry-dependencies.outputs.cache-hit != 'true'
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: poetry sync --no-root
 
       - name: Run Linters
