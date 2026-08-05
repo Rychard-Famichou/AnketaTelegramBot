@@ -15,13 +15,22 @@ async def test_cmd_start_handler(mocker):
     user = User(id=12345, is_bot=False, first_name="Test")
     message = Message(message_id=1, date=datetime.now(), chat=chat, from_user=user, text="/start")
 
-    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
+    mock_answer = mocker.patch.object(Message, "answer", new_callable=AsyncMock)
 
     # 2. Вызываем хэндлер
     await cmd_start(message)
 
     # 3. Проверяем вызовы
-    mock_answer.assert_called_once_with("Добро пожаловать!")
+    mock_answer.assert_called_once()
+
+    # Извлекаем позиционные и именованные аргументы, с которыми был вызван метод
+    args, kwargs = mock_answer.call_args
+
+    # Проверяем текст сообщения
+    assert args[0] == "Добро пожаловать! Откройте анкету:"
+
+    # Проверяем, что клавиатура в принципе была передана
+    assert "reply_markup" in kwargs
 
 
 @pytest.mark.django_db(transaction=True)
@@ -32,13 +41,13 @@ async def test_check_status_handler_candidate_not_exists(mocker):
     user = User(id=11111, is_bot=False, first_name="NewUser")
     message = Message(message_id=2, date=datetime.now(), chat=chat, from_user=user, text="/status")
 
-    # Мокаем метод answer
-    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
+    # Патчим класс Message, а не инстанс message
+    mock_answer = mocker.patch.object(Message, "answer", new_callable=AsyncMock)
 
     # Вызываем хэндлер
     await check_status(message)
 
-    # Одной этой строчки достаточно: она проверяет и факт вызова, и точный текст
+    # Проверяем вызов через замоканный метод класса
     mock_answer.assert_called_once_with("Вы еще не заполнили анкету. Нажмите на кнопку Web App ниже.")
 
 
@@ -48,7 +57,7 @@ async def test_check_status_handler_candidate_exists(mocker):
     """Тест случая, когда кандидат успешно найден в базе данных"""
     telegram_id = 99999
 
-    # 1. Создаем тестовую запись в БД Django.
+    # 1. Создаем тестовую запись в БД Django
     candidate = await Candidate.objects.acreate(
         telegram_id=telegram_id,
         first_name="Ivan",
@@ -57,15 +66,14 @@ async def test_check_status_handler_candidate_exists(mocker):
         phone="+79991112233",
     )
 
-    # Получаем отформатированную дату, которую сгенерировала БД (или Django)
     expected_date_str = candidate.created_at.strftime("%d.%m.%Y")
 
     chat = Chat(id=12345, type="private")
     user = User(id=telegram_id, is_bot=False, first_name="ExistingUser")
     message = Message(message_id=3, date=datetime.now(), chat=chat, from_user=user, text="/status")
 
-    # Мокаем метод answer
-    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
+    # Патчим класс Message, а не инстанс message
+    mock_answer = mocker.patch.object(Message, "answer", new_callable=AsyncMock)
 
     # 2. Вызываем хэндлер
     await check_status(message)

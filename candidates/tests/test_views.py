@@ -111,7 +111,7 @@ class TestCandidateAPI:
         url = reverse("candidate_detail")
         response = api_client.get(url)  # Не передаем заголовок
 
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @patch("candidates.views.send_telegram_notification")
     def test_json_payload_cannot_override_telegram_id_and_username(
