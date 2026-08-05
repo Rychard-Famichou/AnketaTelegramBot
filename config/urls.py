@@ -24,8 +24,10 @@ from django.urls import include, path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("", include("telegram_bot.urls")),
     path("", include("candidates.urls")),
 ]
+
 if settings.DEBUG:
     # Заставляем Django в режиме отладки искать файлы СТРОГО в вашей папке static в корне проекта
     urlpatterns += static(settings.STATIC_URL, document_root=os.path.join(settings.BASE_DIR, "static"))
