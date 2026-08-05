@@ -1,8 +1,6 @@
 from datetime import datetime
 from unittest.mock import AsyncMock
 
-from django.conf import settings
-
 import pytest
 from aiogram.types import Chat, Message, User
 
@@ -11,53 +9,47 @@ from telegram_bot.handlers import check_status, cmd_start
 
 
 @pytest.mark.asyncio
-async def test_cmd_start_handler():
+async def test_cmd_start_handler(mocker):
     # 1. Готовим валидные данные
     chat = Chat(id=12345, type="private")
     user = User(id=12345, is_bot=False, first_name="Test")
     message = Message(message_id=1, date=datetime.now(), chat=chat, from_user=user, text="/start")
 
-    message.answer = AsyncMock()
+    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
 
     # 2. Вызываем хэндлер
     await cmd_start(message)
 
     # 3. Проверяем вызовы
-    message.answer.assert_called_once()
-    called_args, called_kwargs = message.answer.call_args
-
-    # Проверяем текст ответа
-    assert "Добро пожаловать!" in called_args[0]
-
-    web_app_url = called_kwargs["reply_markup"].keyboard[0][0].web_app.url
-    assert web_app_url == settings.WEB_APP_URL
+    mock_answer.assert_called_once_with("Добро пожаловать!")
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-async def test_check_status_handler_candidate_not_exists():
+async def test_check_status_handler_candidate_not_exists(mocker):
     """Тест случая, когда кандидата нет в базе данных (DoesNotExist)"""
     chat = Chat(id=12345, type="private")
     user = User(id=11111, is_bot=False, first_name="NewUser")
     message = Message(message_id=2, date=datetime.now(), chat=chat, from_user=user, text="/status")
-    message.answer = AsyncMock()
+
+    # Мокаем метод answer
+    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
 
     # Вызываем хэндлер
     await check_status(message)
 
-    # Проверяем текст для ветки Должно выдать: 'Вы еще не заполнили анкету...'
-    message.answer.assert_called_once()
-    called_args, _ = message.answer.call_args
-    assert "Вы еще не заполнили анкету" in called_args[0]
+    # Одной этой строчки достаточно: она проверяет и факт вызова, и точный текст
+    mock_answer.assert_called_once_with("Вы еще не заполнили анкету. Нажмите на кнопку Web App ниже.")
 
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-async def test_check_status_handler_candidate_exists():
+async def test_check_status_handler_candidate_exists(mocker):
     """Тест случая, когда кандидат успешно найден в базе данных"""
-    # 1. Создаем тестовую запись в БД Django. Используем асинхронный acreate.
     telegram_id = 99999
-    await Candidate.objects.acreate(
+
+    # 1. Создаем тестовую запись в БД Django.
+    candidate = await Candidate.objects.acreate(
         telegram_id=telegram_id,
         first_name="Ivan",
         last_name="Ivanov",
@@ -65,15 +57,18 @@ async def test_check_status_handler_candidate_exists():
         phone="+79991112233",
     )
 
+    # Получаем отформатированную дату, которую сгенерировала БД (или Django)
+    expected_date_str = candidate.created_at.strftime("%d.%m.%Y")
+
     chat = Chat(id=12345, type="private")
     user = User(id=telegram_id, is_bot=False, first_name="ExistingUser")
     message = Message(message_id=3, date=datetime.now(), chat=chat, from_user=user, text="/status")
-    message.answer = AsyncMock()
+
+    # Мокаем метод answer
+    mock_answer = mocker.patch.object(message, "answer", new_callable=AsyncMock)
 
     # 2. Вызываем хэндлер
     await check_status(message)
 
-    # 3. Проверяем, что хэндлер зашел в ветку try: и выдал статус
-    message.answer.assert_called_once()
-    called_args, _ = message.answer.call_args
-    assert "Вы уже подали анкету! Статус: зарегистрирован." in called_args[0]
+    # 3. Проверяем строгий текст с учетом правильного формата даты
+    mock_answer.assert_called_once_with(f"Вы уже подали анкету! Статус: зарегистрирован. Дата: {expected_date_str}")
