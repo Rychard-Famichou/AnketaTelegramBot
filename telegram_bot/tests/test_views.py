@@ -63,10 +63,7 @@ class TestTelegramWebhookView:
         }
 
         response = await async_client.post(
-            URL,
-            data=json.dumps(payload),
-            content_type="application/json",
-            headers=headers
+            URL, data=json.dumps(payload), content_type="application/json", headers=headers
         )
 
         assert response.status_code == 200
@@ -86,12 +83,7 @@ class TestTelegramWebhookView:
 
         invalid_payload = '{"invalid_field": "no_update_id_here"}'
 
-        response = await async_client.post(
-            URL,
-            data=invalid_payload,
-            content_type="application/json",
-            headers=headers
-        )
+        response = await async_client.post(URL, data=invalid_payload, content_type="application/json", headers=headers)
 
         assert response.status_code == 400
         assert "Некорректный формат Update." in response.content.decode("utf-8")
