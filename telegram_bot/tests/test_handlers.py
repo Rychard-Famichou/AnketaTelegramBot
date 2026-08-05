@@ -9,27 +9,25 @@ from telegram_bot.handlers import check_status, cmd_start
 
 
 @pytest.mark.asyncio
-async def test_cmd_start_handler(mocker):
-    # 1. Готовим валидные данные
+async def test_cmd_start_handler(mocker, settings):  # Добавили фикстуру settings
+    # 1. Принудительно задаем значение переменной окружения для теста
+    settings.WEB_APP_URL = "https://example.com"
+
+    # Готовим валидные данные
     chat = Chat(id=12345, type="private")
     user = User(id=12345, is_bot=False, first_name="Test")
     message = Message(message_id=1, date=datetime.now(), chat=chat, from_user=user, text="/start")
 
     mock_answer = mocker.patch.object(Message, "answer", new_callable=AsyncMock)
 
-    # 2. Вызываем хэндлер
+    # 2. Вызываем хэндлер (теперь Pydantic не упадет)
     await cmd_start(message)
 
-    # 3. Проверяем вызовы
+    # 3. Проверяем вызовы через Способ 1 (нестрогая проверка)
     mock_answer.assert_called_once()
 
-    # Извлекаем позиционные и именованные аргументы, с которыми был вызван метод
     args, kwargs = mock_answer.call_args
-
-    # Проверяем текст сообщения
     assert args[0] == "Добро пожаловать! Откройте анкету:"
-
-    # Проверяем, что клавиатура в принципе была передана
     assert "reply_markup" in kwargs
 
 
