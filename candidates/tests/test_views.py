@@ -19,13 +19,16 @@ def api_client():
 @pytest.fixture
 def mock_tg_user():
     """Фикстура, имитирующая авторизованного пользователя Telegram."""
-    return TelegramWebAppUser({"id": 123456789,
-                               "username": "test_tg_user",
-                               "first_name": "Ivan",
-                               "last_name": "Ivanov",
-                               "gender": "male",
-                               "phone": "+79991112233"
-                               })
+    return TelegramWebAppUser(
+        {
+            "id": 123456789,
+            "username": "test_tg_user",
+            "first_name": "Ivan",
+            "last_name": "Ivanov",
+            "gender": "male",
+            "phone": "+79991112233",
+        }
+    )
 
 
 @pytest.fixture
@@ -46,10 +49,7 @@ class TestCandidateAPI:
     def test_create_candidate_success(self, mock_notify, api_client, mock_authenticate, mock_tg_user):
         """Тест успешного создания нового кандидата."""
         url = reverse("candidate_create")
-        payload = {"first_name": "Ivan",
-                   "last_name": "Ivanov",
-                   "gender": "male",
-                   "phone": "+79991112233"}
+        payload = {"first_name": "Ivan", "last_name": "Ivanov", "gender": "male", "phone": "+79991112233"}
 
         # Передаем заголовок, чтобы сработал наш пропатченный метод authenticate
         response = api_client.post(url, data=payload, format="json", HTTP_X_TELEGRAM_INIT_DATA="valid_str")
@@ -83,7 +83,14 @@ class TestCandidateAPI:
 
     def test_get_candidate_detail_success(self, api_client, mock_authenticate, mock_tg_user):
         """Тест успешного получения данных профиля."""
-        Candidate.objects.create(telegram_id=mock_tg_user.id, username=mock_tg_user.username, first_name="Иван", last_name="Иванов", gender="male", phone="+79991112233")
+        Candidate.objects.create(
+            telegram_id=mock_tg_user.id,
+            username=mock_tg_user.username,
+            first_name="Иван",
+            last_name="Иванов",
+            gender="male",
+            phone="+79991112233",
+        )
 
         url = reverse("candidate_detail")
         response = api_client.get(url, HTTP_X_TELEGRAM_INIT_DATA="valid_str")
@@ -107,9 +114,7 @@ class TestCandidateAPI:
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @patch("candidates.views.send_telegram_notification")
-    def test_json_payload_cannot_override_telegram_id_and_username(
-            self, api_client, mock_authenticate, mock_tg_user
-    ):
+    def test_json_payload_cannot_override_telegram_id_and_username(self, api_client, mock_authenticate, mock_tg_user):
         """
         Проверка: Telegram ID и username, присланные злоумышленником в JSON-теле,
         НЕ МОГУТ подменить доверенные данные, полученные из initData.
@@ -144,10 +149,26 @@ class TestCandidateAPI:
         """
         # 1. Создаем в базе данных анкету Пользователя Б (жертва)
         user_b_id = 888888888
-        candidate_b = Candidate.objects.create(telegram_id=user_b_id, username="user_b", first_name="Борис", last_name="Борисов", gender="male", phone="+79991112233")
+        candidate_b = Candidate.objects.create(
+            telegram_id=user_b_id,
+            username="user_b",
+            first_name="Борис",
+            last_name="Борисов",
+            gender="male",
+            phone="+79991112233",
+        )
 
         # 2. Имитируем вход Пользователя А (злоумышленник)
-        user_a = TelegramWebAppUser({"id": 111111111, "username": "user_a", "first_name": "Ivan", "last_name": "Ivanov", "gender": "male", "phone": "+79991112233"})
+        user_a = TelegramWebAppUser(
+            {
+                "id": 111111111,
+                "username": "user_a",
+                "first_name": "Ivan",
+                "last_name": "Ivanov",
+                "gender": "male",
+                "phone": "+79991112233",
+            }
+        )
 
         # Нам нужно динамически подменить аутентификацию именно на Пользователя А
         with patch("candidates.authentication.TelegramWebAppAuthentication.authenticate") as mock_auth:

@@ -1,9 +1,10 @@
 from datetime import datetime
 from unittest.mock import AsyncMock
 
+from django.conf import settings
+
 import pytest
 from aiogram.types import Chat, Message, User
-from django.conf import settings  # Импортируем настройки Django
 
 from candidates.models import Candidate
 from telegram_bot.handlers import check_status, cmd_start
@@ -14,15 +15,8 @@ async def test_cmd_start_handler():
     # 1. Готовим валидные данные
     chat = Chat(id=12345, type="private")
     user = User(id=12345, is_bot=False, first_name="Test")
-    message = Message(
-        message_id=1,
-        date=datetime.now(),  # Исправлено: не None, а валидный datetime
-        chat=chat,
-        from_user=user,
-        text="/start"
-    )
+    message = Message(message_id=1, date=datetime.now(), chat=chat, from_user=user, text="/start")
 
-    # Мокаем метод answer у сообщения, так как хэндлер вызывает message.answer
     message.answer = AsyncMock()
 
     # 2. Вызываем хэндлер
@@ -35,7 +29,6 @@ async def test_cmd_start_handler():
     # Проверяем текст ответа
     assert "Добро пожаловать!" in called_args[0]
 
-    # Исправлено: правильный обход вложенной клавиатуры aiogram 3.x
     web_app_url = called_kwargs["reply_markup"].keyboard[0][0].web_app.url
     assert web_app_url == settings.WEB_APP_URL
 
@@ -45,15 +38,8 @@ async def test_cmd_start_handler():
 async def test_check_status_handler_candidate_not_exists():
     """Тест случая, когда кандидата нет в базе данных (DoesNotExist)"""
     chat = Chat(id=12345, type="private")
-    # Передаем id=11111, которого гарантированно нет в чистой тестовой БД
     user = User(id=11111, is_bot=False, first_name="NewUser")
-    message = Message(
-        message_id=2,
-        date=datetime.now(),
-        chat=chat,
-        from_user=user,
-        text="/status"
-    )
+    message = Message(message_id=2, date=datetime.now(), chat=chat, from_user=user, text="/status")
     message.answer = AsyncMock()
 
     # Вызываем хэндлер
@@ -81,13 +67,7 @@ async def test_check_status_handler_candidate_exists():
 
     chat = Chat(id=12345, type="private")
     user = User(id=telegram_id, is_bot=False, first_name="ExistingUser")
-    message = Message(
-        message_id=3,
-        date=datetime.now(),
-        chat=chat,
-        from_user=user,
-        text="/status"
-    )
+    message = Message(message_id=3, date=datetime.now(), chat=chat, from_user=user, text="/status")
     message.answer = AsyncMock()
 
     # 2. Вызываем хэндлер

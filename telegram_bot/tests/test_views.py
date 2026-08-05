@@ -36,8 +36,8 @@ class TestTelegramWebhookView:
                 "date": 0,
                 "chat": {"id": 111, "type": "private"},
                 "from": {"id": 111, "is_bot": False, "first_name": "Test"},
-                "text": "Hi"
-            }
+                "text": "Hi",
+            },
         }
 
         response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
@@ -56,8 +56,8 @@ class TestTelegramWebhookView:
                 "date": 0,
                 "chat": {"id": 111, "type": "private"},
                 "from": {"id": 111, "is_bot": False, "first_name": "Test"},
-                "text": "Hi"
-            }
+                "text": "Hi",
+            },
         }
 
         response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
