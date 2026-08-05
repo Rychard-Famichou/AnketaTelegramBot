@@ -1,3 +1,4 @@
+import json
 from unittest.mock import AsyncMock, patch
 
 from django.urls import reverse
@@ -48,7 +49,8 @@ class TestTelegramWebhookView:
 
     async def test_valid_token_and_update_returns_200(self, async_client, mock_feed_update):
         """2. Корректный токен и update возвращают 200, вызывается feed_update."""
-        headers = {"HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN": SECRET_TOKEN}
+        headers = {"X-Telegram-Bot-API-Secret-Token": SECRET_TOKEN}
+
         payload = {
             "update_id": 12345,
             "message": {
@@ -60,7 +62,12 @@ class TestTelegramWebhookView:
             },
         }
 
-        response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
+        response = await async_client.post(
+            URL,
+            data=json.dumps(payload),
+            content_type="application/json",
+            headers=headers
+        )
 
         assert response.status_code == 200
         assert response.content.decode("utf-8") == "OK"
@@ -75,10 +82,16 @@ class TestTelegramWebhookView:
 
     async def test_invalid_json_returns_400(self, async_client, mock_feed_update):
         """3. Некорректный JSON/update возвращает 400, и обработчик не вызывается."""
-        headers = {"HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN": SECRET_TOKEN}
+        headers = {"X-Telegram-Bot-API-Secret-Token": SECRET_TOKEN}
+
         invalid_payload = '{"invalid_field": "no_update_id_here"}'
 
-        response = await async_client.post(URL, data=invalid_payload, content_type="application/json", **headers)
+        response = await async_client.post(
+            URL,
+            data=invalid_payload,
+            content_type="application/json",
+            headers=headers
+        )
 
         assert response.status_code == 400
         assert "Некорректный формат Update." in response.content.decode("utf-8")
