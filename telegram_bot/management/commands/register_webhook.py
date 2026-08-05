@@ -14,9 +14,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Регистрация вебхука на URL: {webhook_url}...")
 
             await bot.set_webhook(
-                url=webhook_url,
-                secret_token=settings.TELEGRAM_SECRET_TOKEN,
-                drop_pending_updates=True
+                url=webhook_url, secret_token=settings.TELEGRAM_SECRET_TOKEN, drop_pending_updates=True
             )
             self.stdout.write(self.style.SUCCESS(" [Bot] Вебхук успешно зарегистрирован!"))
 

@@ -1,7 +1,8 @@
+from django.conf import settings
+
 from aiogram import F, Router
 from aiogram.filters import CommandStart
 from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, WebAppInfo
-from django.conf import settings
 
 from candidates.models import Candidate
 
@@ -34,6 +35,4 @@ async def check_status(message: Message):
             f"Вы уже подали анкету! Статус: зарегистрирован. Дата: {candidate.created_at.strftime('%d.%m.%Y')}"
         )
     except Candidate.DoesNotExist:
-        await message.answer(
-            "Вы еще не заполнили анкету. Нажмите на кнопку Web App ниже."
-        )
+        await message.answer("Вы еще не заполнили анкету. Нажмите на кнопку Web App ниже.")

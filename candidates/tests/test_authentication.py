@@ -4,9 +4,10 @@ import json
 import time
 from urllib.parse import urlencode
 
-import pytest
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.test import APIRequestFactory
+
+import pytest
 
 from candidates.authentication import TelegramWebAppAuthentication, TelegramWebAppUser
 
@@ -16,10 +17,7 @@ def generate_init_data(user_data, auth_date=None, bot_token="fake_bot_token"):
     if auth_date is None:
         auth_date = int(time.time())
 
-    data = {
-        "auth_date": str(auth_date),
-        "user": json.dumps(user_data)
-    }
+    data = {"auth_date": str(auth_date), "user": json.dumps(user_data)}
 
     # Сортируем и собираем строку для подписи
     data_check_string = "\n".join(f"{key}={value}" for key, value in sorted(data.items()))
@@ -47,13 +45,7 @@ def factory():
 @pytest.fixture
 def valid_user_payload():
     """Фикстура с валидными данными пользователя Telegram."""
-    return {
-        "id": 123456,
-        "first_name": "Ivan",
-        "last_name": "Ivanov",
-        "username": "vanya_test",
-        "language_code": "ru"
-    }
+    return {"id": 123456, "first_name": "Ivan", "last_name": "Ivanov", "username": "vanya_test", "language_code": "ru"}
 
 
 def test_auth_success(factory, valid_user_payload):

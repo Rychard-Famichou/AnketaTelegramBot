@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import AsyncMock
+
+import pytest
 from aiogram import Bot
+
 
 @pytest.fixture
 def mock_bot(mocker):

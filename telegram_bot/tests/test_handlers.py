@@ -1,10 +1,12 @@
-import pytest
 from unittest.mock import AsyncMock
-from aiogram.types import Message, Chat, User
+
 from rest_framework.test import APIClient
 
+import pytest
+from aiogram.types import Chat, Message, User
+
 from config import settings
-from telegram_bot.handlers import cmd_start, check_status
+from telegram_bot.handlers import check_status, cmd_start
 
 
 @pytest.mark.asyncio
@@ -14,14 +16,7 @@ async def test_cmd_start_handler(mock_bot):
     user = User(id=12345, is_bot=False, first_name="Test")
 
     # Инициализируем сообщение, привязав наш замоканный бот
-    message = Message(
-        message_id=1,
-        date=None,
-        chat=chat,
-        from_user=user,
-        text="/start",
-        bot=mock_bot
-    )
+    message = Message(message_id=1, date=None, chat=chat, from_user=user, text="/start", bot=mock_bot)
 
     # 2. Вызываем хэндлер
     await cmd_start(message)
@@ -35,6 +30,7 @@ async def test_cmd_start_handler(mock_bot):
     assert "Добро пожаловать!" in called_args[0]
     assert called_kwargs["reply_markup"].keyboard[0][0].web_app.url == settings.WEB_APP_URL
 
+
 @pytest.mark.asyncio
 async def test_check_status_handler(mock_bot):
     # 1. Создаем фейковый объект сообщения
@@ -42,14 +38,7 @@ async def test_check_status_handler(mock_bot):
     user = User(id=12345, is_bot=False, first_name="Test")
 
     # Инициализируем сообщение, привязав наш замоканный бот
-    message = Message(
-        message_id=1,
-        date=None,
-        chat=chat,
-        from_user=user,
-        text="/start",
-        bot=mock_bot
-    )
+    message = Message(message_id=1, date=None, chat=chat, from_user=user, text="/start", bot=mock_bot)
 
     # 2. Вызываем хэндлер
     await check_status(message)

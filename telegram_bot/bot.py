@@ -10,7 +10,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 # Импорт роутера строго ПОСЛЕ django.setup()
-from telegram_bot.handlers import router
+from telegram_bot.handlers import router  # noqa: E402
 
 bot = Bot(token=settings.TELEGRAM_BOT_TOKEN)
 dp = Dispatcher()

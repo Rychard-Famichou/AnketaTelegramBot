@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden, HttpResponseBadRequest
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -8,6 +8,7 @@ from aiogram.types import Update
 from pydantic import ValidationError
 
 from telegram_bot.bot import bot, dp
+
 
 # Create your views here.
 @method_decorator(csrf_exempt, name="dispatch")

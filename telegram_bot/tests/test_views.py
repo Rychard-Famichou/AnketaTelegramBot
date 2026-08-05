@@ -1,6 +1,8 @@
-import pytest
 from unittest.mock import AsyncMock, patch
+
 from django.urls import reverse
+
+import pytest
 
 # Константы для тестов
 SECRET_TOKEN = "super_secret_token_123"
@@ -38,7 +40,9 @@ class TestTelegramWebhookView:
     async def test_valid_token_and_update_returns_200(self, async_client, mock_feed_update):
         """2. Корректный токен и update возвращают 200, вызывается feed_update."""
         headers = {"HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN": SECRET_TOKEN}
-        payload = '{"update_id": 12345, "message": {"message_id": 1, "chat": {"id": 111, "type": "private"}, "text": "Hi"}}'
+        payload = (
+            '{"update_id": 12345, "message": {"message_id": 1, "chat": {"id": 111, "type": "private"}, "text": "Hi"}}'
+        )
 
         response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
 

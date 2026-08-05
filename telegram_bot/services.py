@@ -1,5 +1,7 @@
 import asyncio
+
 from asgiref.sync import async_to_sync
+
 from telegram_bot.bot import bot
 
 
