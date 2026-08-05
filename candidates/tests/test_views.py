@@ -114,7 +114,9 @@ class TestCandidateAPI:
         assert response.status_code == status.HTTP_403_FORBIDDEN
 
     @patch("candidates.views.send_telegram_notification")
-    def test_json_payload_cannot_override_telegram_id_and_username(self, api_client, mock_authenticate, mock_tg_user):
+    def test_json_payload_cannot_override_telegram_id_and_username(
+            self, mock_send_notification, api_client, mock_authenticate, mock_tg_user
+    ):
         """
         Проверка: Telegram ID и username, присланные злоумышленником в JSON-теле,
         НЕ МОГУТ подменить доверенные данные, полученные из initData.
