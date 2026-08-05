@@ -49,6 +49,7 @@ jobs:
           POSTGRES_DB: postgresql_db
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres_password
+          TELEGRAM_BOT_TOKEN: 123456789:AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQq
         ports:
           - 5432:5432
         options: >-
@@ -91,6 +92,7 @@ jobs:
           POSTGRES_PASSWORD: "postgres_password"
           DB_HOST: "127.0.0.1"
           DB_PORT: "5432"
+          TELEGRAM_BOT_TOKEN: "123456789:AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQq"
         run: |
           # Включаем строгий режим обработки ошибок в bash
           set -e
