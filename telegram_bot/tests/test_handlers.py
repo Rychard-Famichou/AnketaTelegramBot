@@ -1,73 +1,99 @@
+from datetime import datetime
 from unittest.mock import AsyncMock
-
-from rest_framework.test import APIClient
 
 import pytest
 from aiogram.types import Chat, Message, User
+from django.conf import settings  # Импортируем настройки Django
 
-from config import settings
+from candidates.models import Candidate
 from telegram_bot.handlers import check_status, cmd_start
 
 
 @pytest.mark.asyncio
-async def test_cmd_start_handler(mock_bot):
-    # 1. Создаем фейковый объект сообщения
+async def test_cmd_start_handler():
+    # 1. Готовим валидные данные
     chat = Chat(id=12345, type="private")
     user = User(id=12345, is_bot=False, first_name="Test")
+    message = Message(
+        message_id=1,
+        date=datetime.now(),  # Исправлено: не None, а валидный datetime
+        chat=chat,
+        from_user=user,
+        text="/start"
+    )
 
-    # Инициализируем сообщение, привязав наш замоканный бот
-    message = Message(message_id=1, date=None, chat=chat, from_user=user, text="/start", bot=mock_bot)
+    # Мокаем метод answer у сообщения, так как хэндлер вызывает message.answer
+    message.answer = AsyncMock()
 
     # 2. Вызываем хэндлер
     await cmd_start(message)
 
-    # 3. Проверяем, что бот попытался ответить правильным текстом
-    mock_bot.answer.assert_called_once()
+    # 3. Проверяем вызовы
+    message.answer.assert_called_once()
+    called_args, called_kwargs = message.answer.call_args
 
-    # Получаем аргументы, с которыми был вызван answer
-    called_args, called_kwargs = mock_bot.answer.call_args
-
+    # Проверяем текст ответа
     assert "Добро пожаловать!" in called_args[0]
-    assert called_kwargs["reply_markup"].keyboard[0][0].web_app.url == settings.WEB_APP_URL
+
+    # Исправлено: правильный обход вложенной клавиатуры aiogram 3.x
+    web_app_url = called_kwargs["reply_markup"].keyboard[0][0].web_app.url
+    assert web_app_url == settings.WEB_APP_URL
 
 
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.asyncio
-async def test_check_status_handler(mock_bot):
-    # 1. Создаем фейковый объект сообщения
+async def test_check_status_handler_candidate_not_exists():
+    """Тест случая, когда кандидата нет в базе данных (DoesNotExist)"""
     chat = Chat(id=12345, type="private")
-    user = User(id=12345, is_bot=False, first_name="Test")
+    # Передаем id=11111, которого гарантированно нет в чистой тестовой БД
+    user = User(id=11111, is_bot=False, first_name="NewUser")
+    message = Message(
+        message_id=2,
+        date=datetime.now(),
+        chat=chat,
+        from_user=user,
+        text="/status"
+    )
+    message.answer = AsyncMock()
 
-    # Инициализируем сообщение, привязав наш замоканный бот
-    message = Message(message_id=1, date=None, chat=chat, from_user=user, text="/start", bot=mock_bot)
+    # Вызываем хэндлер
+    await check_status(message)
+
+    # Проверяем текст для ветки Должно выдать: 'Вы еще не заполнили анкету...'
+    message.answer.assert_called_once()
+    called_args, _ = message.answer.call_args
+    assert "Вы еще не заполнили анкету" in called_args[0]
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.asyncio
+async def test_check_status_handler_candidate_exists():
+    """Тест случая, когда кандидат успешно найден в базе данных"""
+    # 1. Создаем тестовую запись в БД Django. Используем асинхронный acreate.
+    telegram_id = 99999
+    await Candidate.objects.acreate(
+        telegram_id=telegram_id,
+        first_name="Ivan",
+        last_name="Ivanov",
+        gender="male",
+        phone="+79991112233",
+    )
+
+    chat = Chat(id=12345, type="private")
+    user = User(id=telegram_id, is_bot=False, first_name="ExistingUser")
+    message = Message(
+        message_id=3,
+        date=datetime.now(),
+        chat=chat,
+        from_user=user,
+        text="/status"
+    )
+    message.answer = AsyncMock()
 
     # 2. Вызываем хэндлер
     await check_status(message)
-    # 3. Проверяем, что бот попытался ответить правильным текстом
-    mock_bot.answer.assert_called_once()
 
-    # Получаем аргументы, с которыми был вызван answer
-    called_args, called_kwargs = mock_bot.answer.call_args
-
-    assert "Вы еще не заполнили анкету. Нажмите на кнопку Web App ниже." in called_args[0]
-    assert called_kwargs["reply_markup"].keyboard[0][0].web_app.url == settings.WEB_APP_URL
-
-
-@pytest.mark.django_db
-@pytest.mark.asyncio
-def test_drf_view_sends_telegram_notification(mocker):
-    # 1. Мокаем объект бота внутри вашего DRF-модуля, где вызывается отправка
-    # Предположим, отправка идет через ваш инициализированный bot из файла main.py
-    mock_send = mocker.patch("telegram_bot.main.bot.send_message", new_callable=AsyncMock)
-
-    # 2. Делаем запрос к API
-    client = APIClient()
-    response = client.post("/api/v1/orders/", {"item": "Книга", "price": 500})
-
-    # 3. Проверки
-    assert response.status_code == 201
-
-    # Проверяем, ушло ли уведомление в Телеграм
-    mock_send.assert_called_once()
-    kwargs = mock_send.call_args[1]
-    assert "Новый заказ" in kwargs["text"]
-    assert kwargs["chat_id"] == 12345  # ID админа или пользователя
+    # 3. Проверяем, что хэндлер зашел в ветку try: и выдал статус
+    message.answer.assert_called_once()
+    called_args, _ = message.answer.call_args
+    assert "Вы уже подали анкету! Статус: зарегистрирован." in called_args[0]

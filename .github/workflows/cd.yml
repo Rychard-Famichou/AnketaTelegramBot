@@ -6,7 +6,6 @@ on:
 
 jobs:
   deploy:
-    # Запускаем только если тесты на PR прошли успешно
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

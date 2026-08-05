@@ -29,7 +29,16 @@ class TestTelegramWebhookView:
     async def test_invalid_secret_token_returns_403(self, async_client, mock_feed_update):
         """1. Неверный токен возвращает 403, и обработчик aiogram не вызывается."""
         headers = {"HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN": "wrong_token"}
-        payload = '{"update_id": 12345, "message": {"message_id": 1, "text": "Hi"}}'
+        payload = {
+            "update_id": 12345,
+            "message": {
+                "message_id": 1,
+                "date": 0,
+                "chat": {"id": 111, "type": "private"},
+                "from": {"id": 111, "is_bot": False, "first_name": "Test"},
+                "text": "Hi"
+            }
+        }
 
         response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
 
@@ -40,9 +49,16 @@ class TestTelegramWebhookView:
     async def test_valid_token_and_update_returns_200(self, async_client, mock_feed_update):
         """2. Корректный токен и update возвращают 200, вызывается feed_update."""
         headers = {"HTTP_X_TELEGRAM_BOT_API_SECRET_TOKEN": SECRET_TOKEN}
-        payload = (
-            '{"update_id": 12345, "message": {"message_id": 1, "chat": {"id": 111, "type": "private"}, "text": "Hi"}}'
-        )
+        payload = {
+            "update_id": 12345,
+            "message": {
+                "message_id": 1,
+                "date": 0,
+                "chat": {"id": 111, "type": "private"},
+                "from": {"id": 111, "is_bot": False, "first_name": "Test"},
+                "text": "Hi"
+            }
+        }
 
         response = await async_client.post(URL, data=payload, content_type="application/json", **headers)
 
