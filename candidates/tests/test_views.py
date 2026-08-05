@@ -115,7 +115,7 @@ class TestCandidateAPI:
 
     @patch("candidates.views.send_telegram_notification")
     def test_json_payload_cannot_override_telegram_id_and_username(
-            self, mock_send_notification, api_client, mock_authenticate, mock_tg_user
+        self, mock_send_notification, api_client, mock_authenticate, mock_tg_user
     ):
         """
         Проверка: Telegram ID и username, присланные злоумышленником в JSON-теле,
