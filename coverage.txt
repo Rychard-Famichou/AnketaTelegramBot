@@ -1,0 +1,55 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0
+django: version: 6.0.8, settings: config.settings (from ini)
+rootdir: /home/runner/work/AnketaTelegramBot/AnketaTelegramBot
+configfile: pytest.ini
+plugins: cov-7.1.0, asyncio-1.4.0, mock-3.15.1, django-4.13.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 22 items
+
+candidates/tests/test_views.py .......                                   [ 31%]
+telegram_bot/tests/test_views.py ...                                     [ 45%]
+telegram_bot/tests/test_webhook.py ..                                    [ 54%]
+telegram_bot/tests/test_handlers.py ..                                   [ 63%]
+candidates/tests/test_authentication.py ......                           [ 90%]
+candidates/tests/test_views.py .                                         [ 95%]
+telegram_bot/tests/test_handlers.py .                                    [100%]
+
+=============================== warnings summary ===============================
+telegram_bot/tests/test_handlers.py::test_cmd_start_handler
+  /home/runner/work/AnketaTelegramBot/AnketaTelegramBot:0: PytestWarning: Error when trying to teardown test databases: OperationalError('database "test_postgresql_db" is being accessed by other users\nDETAIL:  There is 1 other session using the database.')
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.12.13-final-0 _______________
+
+Name                                                   Stmts   Miss  Cover   Missing
+------------------------------------------------------------------------------------
+candidates/admin.py                                        6      0   100%
+candidates/apps.py                                         3      0   100%
+candidates/authentication.py                              38      0   100%
+candidates/forms.py                                        7      0   100%
+candidates/models.py                                      13      0   100%
+candidates/serializers.py                                  6      0   100%
+candidates/tests/test_authentication.py                   69      0   100%
+candidates/tests/test_views.py                            89      0   100%
+candidates/urls.py                                         3      0   100%
+candidates/views.py                                       39      1    97%   45
+config/urls.py                                             8      1    88%   33
+telegram_bot/apps.py                                       3      0   100%
+telegram_bot/bot.py                                       10      0   100%
+telegram_bot/handlers.py                                  18      0   100%
+telegram_bot/management/commands/register_webhook.py      17      0   100%
+telegram_bot/services.py                                  17     12    29%   10-31, 39-44
+telegram_bot/tests/conftest.py                             9      4    56%   10-15
+telegram_bot/tests/test_handlers.py                       39      0   100%
+telegram_bot/tests/test_views.py                          40      0   100%
+telegram_bot/tests/test_webhook.py                        29      0   100%
+telegram_bot/urls.py                                       3      0   100%
+telegram_bot/views.py                                     23      3    87%   32-34
+------------------------------------------------------------------------------------
+TOTAL                                                    489     21    96%
+
+11 empty files skipped.
+Required test coverage of 80.0% reached. Total coverage: 95.71%
+======================== 22 passed, 1 warning in 15.73s ========================
