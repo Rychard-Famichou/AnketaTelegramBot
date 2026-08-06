@@ -22,11 +22,9 @@ ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /app
 
-# Копируем конфигурационные файлы
-COPY pyproject.toml README.md ./
+COPY pyproject.toml ./
 
-# Генерируем чистый lock-файл прямо внутри Linux-контейнера и устанавливаем зависимости
-RUN poetry lock && poetry install --no-root
+RUN poetry lock && poetry install --only main --no-root
 
 # Копируем остальной код проекта
 COPY . .

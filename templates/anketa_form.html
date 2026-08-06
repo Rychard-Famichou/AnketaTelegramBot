@@ -54,7 +54,11 @@
 <script>
     document.addEventListener("DOMContentLoaded", async function () {
 
-        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        const tg = window.Telegram?.WebApp;
+        if (!tg?.initData) {
+            alert("Откройте анкету через Telegram.");
+            return;
+        }
         if (tg) tg.expand();
 
         const user = tg && tg.initDataUnsafe ? tg.initDataUnsafe.user : null;
@@ -63,22 +67,21 @@
         // БЛОК ПРЕДЗАПОЛНЕНИЯ ДАННЫХ
         if (user && user.id) {
             try {
-                // Делает запрос на /api/candidates/ID_ПОЛЬЗОВАТЕЛЯ/
-                const res = await fetch(`/api/candidates/${user.id}/`);
+                const res = await fetch("/api/candidates/me/", {
+                    headers: {
+                        "X-Telegram-Init-Data": tg.initData,
+                    },
+                });
                 if (res.ok) {
                     const data = await res.json();
 
-                    // Находим элементы формы по ID, сгенерированным Django Forms + Crispy
-                    const firstNameField = document.getElementById('id_first_name');
-                    const lastNameField = document.getElementById('id_last_name');
-                    const genderField = document.getElementById('id_gender');
-                    const phoneField = document.getElementById('id_phone'); // Исправлено под модель (id_phone)
-
-                    // Заполняем поля, если они существуют на странице
-                    if (firstNameField) firstNameField.value = data.first_name || '';
-                    if (lastNameField) lastNameField.value = data.last_name || '';
-                    if (genderField) genderField.value = data.gender || 'Мужской';
-                    if (phoneField) phoneField.value = data.phone || '';
+                    // Автоматическое предзаполнение любых полей
+                    Object.keys(data).forEach(key => {
+                        const field = document.getElementById(`id_${key}`);
+                        if (field) {
+                            field.value = data[key] || '';
+                        }
+                    });
 
                     console.log("Данные анкеты успешно предзаполнены из БД");
                 } else if (res.status === 404) {
@@ -105,30 +108,21 @@
             const formDataInstance = new FormData(this);
             const formData = Object.fromEntries(formDataInstance.entries());
 
-            let telegram_id = null;
-            let username = null;
-
-            if (user) {
-                telegram_id = Number(user.id);
-                username = user.username || null;
-            }
-
-            // Добавляем обязательные данные в JSON
-            formData.telegram_id = telegram_id ? telegram_id : 123456789;
-            formData.username = username ? username : "test_browser_user";
+            delete formData.csrfmiddlewaretoken;
 
             try {
-                const response = await fetch('/api/candidates/', {
-                    method: 'POST',
+                const response = await fetch("/api/candidates/", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": document.querySelector("[name=csrfmiddlewaretoken]").value,
+                        "X-Telegram-Init-Data": tg.initData,
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(formData), // Передаем весь объект автоматически
                 });
 
                 if (response.ok) {
-                    alert('Данные успешно сохранены в БД!');
+                    alert('Данные успешно сохранены!');
                     if (tg) tg.close();
                 } else {
                     const errors = await response.json();
