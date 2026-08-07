@@ -1,6 +1,11 @@
 name: Django CI (Linters & Tests)
 
-on: [push]
+on:
+  push:
+    # Исключаем ветку, чтобы при слиянии PR тесты не запускались повторно
+    branches-ignore:
+#      - develop
+      - main
 
 jobs:
   lint:
