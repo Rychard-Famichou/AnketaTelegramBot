@@ -24,7 +24,7 @@ WORKDIR /app
 
 COPY pyproject.toml ./
 
-RUN poetry lock && poetry install --only main --no-root
+RUN poetry install --only main --no-root
 
 # Копируем остальной код проекта
 COPY . .
