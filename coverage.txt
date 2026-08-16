@@ -3,7 +3,7 @@ platform linux -- Python 3.12.13, pytest-9.1.1, pluggy-1.6.0
 django: version: 6.0.8, settings: config.settings (from ini)
 rootdir: /home/runner/work/AnketaTelegramBot/AnketaTelegramBot
 configfile: pytest.ini
-plugins: cov-7.1.0, asyncio-1.4.0, mock-3.15.1, django-4.13.0
+plugins: django-4.13.0, mock-3.15.1, cov-7.1.0, asyncio-1.4.0
 asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
 collected 22 items
 
@@ -52,4 +52,4 @@ TOTAL                                                    489     21    96%
 
 11 empty files skipped.
 Required test coverage of 80.0% reached. Total coverage: 95.71%
-======================== 22 passed, 1 warning in 15.99s ========================
+======================== 22 passed, 1 warning in 18.40s ========================
