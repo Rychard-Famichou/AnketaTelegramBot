@@ -2,7 +2,8 @@ name: CD (Deploy to PR Server)
 
 on:
   pull_request:
-    types: [closed]
+    branches: [ main ]
+    types: [ closed ]
 
 jobs:
   deploy:
